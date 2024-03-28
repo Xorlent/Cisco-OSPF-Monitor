@@ -21,7 +21,7 @@ As networks grow in size and complexity, overseeing the health of all links beco
     - Set authentication credentials for a switch user with "show run" permissions
     - Configure SMTP server and from/to email address settings if email notifications are desired
   - Open a PowerShell window.
-  - Run BackupCiscoSwitches.ps1
+  - Run FetchOSPFStats.ps1
     - Note, this script is intended to be run **once per day**
     - Create a daily scheduled task to run this script for hassle-free config backup/change management
   - Thank Simon Tatham!
