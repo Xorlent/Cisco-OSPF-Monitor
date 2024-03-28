@@ -30,4 +30,4 @@ As networks grow in size and complexity, overseeing the health of all links beco
 > For the sake of convenience, the script will auto-trust/save the SSH key presented by the connected device.  
   > This could allow for a device to assume the IP of a switch and steal authentication credentials.
   > If you would rather not have the tool auto-trust SSH keys, just comment out the line below the following comment within FetchOSPFStats.ps1:  
-    ```# No existing OSPF neighbor detail file in backup path.  Proceed.```
+    ```# Ensure the SSH host key has been saved/trusted```
