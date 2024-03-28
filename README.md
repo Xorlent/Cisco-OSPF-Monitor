@@ -18,7 +18,7 @@ As networks grow in size and complexity, overseeing the health of all links beco
   - Edit switches.txt so it includes the management IP of each switch to back up, one per line.
   - Edit CiscoOSPF-Config.xml
     - Set file paths as appropriate
-    - Set authentication credentials for a switch user with "show run" permissions
+    - Set authentication credentials for a switch user with "show ip ospf" permissions
     - Configure SMTP server and from/to email address settings
   - Open a PowerShell window.
   - Run FetchOSPFStats.ps1
