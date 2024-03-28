@@ -19,7 +19,7 @@ As networks grow in size and complexity, overseeing the health of all links beco
   - Edit CiscoOSPF-Config.xml
     - Set file paths as appropriate
     - Set authentication credentials for a switch user with "show run" permissions
-    - Configure SMTP server and from/to email address settings if email notifications are desired
+    - Configure SMTP server and from/to email address settings
   - Open a PowerShell window.
   - Run FetchOSPFStats.ps1
     - Note, this script is intended to be run **once per day**
