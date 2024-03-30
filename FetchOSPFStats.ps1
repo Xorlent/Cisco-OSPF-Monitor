@@ -32,9 +32,21 @@ foreach($Switch in $SwitchFile){
         # Ensure the SSH host key has been saved/trusted
         & $SaveHostKey $PlinkExe $Switch *> $null
         $PlinkArgs = '-ssh -batch -l ' + $AuthUser + ' -pw ' + $AuthPass + ' ' + $Switch + ' show ip ospf neighbor detail'
-        Write-Host "SAVING: $Switch to $ConfigFile" -ForegroundColor Green
+        Write-Host "SAVING: $Switch neighbor details to $ConfigFile" -ForegroundColor Green
         # Execute the OSPF neighbor detail command, saving a date stamped configuration backup file
         Start-Process -FilePath $PlinkExe -WorkingDirectory $WorkingDir -ArgumentList $PlinkArgs -PassThru -Wait -RedirectStandardOutput $ConfigFile
+    }
+    
+    $RIDFile = $TodaysBackupFolder + '\' + $Switch + '-RID.txt'
+    if (Test-Path -Path $RIDFile -PathType Leaf){
+        Write-Host "SKIPPING: Today's backup already exists for $Switch in $RIDFile" -ForegroundColor Yellow
+        # Backup file already exists, skip.  Could be a duplicate IP in the switch list.
+    }
+    else{ # No existing config file in backup path.  Proceed.
+        $PlinkArgs = '-ssh -batch -l ' + $AuthUser + ' -pw ' + $AuthPass + ' ' + $Switch + ' show ip ospf database router'
+        Write-Host "SAVING: $Switch router DB to $RIDFile" -ForegroundColor Green
+        # Execute the backup command, saving a date stamped configuration backup file
+        Start-Process -FilePath $PlinkExe -WorkingDirectory $WorkingDir -ArgumentList $PlinkArgs -PassThru -Wait -RedirectStandardOutput $RIDFile
     }
 }
 & .\EmailOSPFChanges.ps1
