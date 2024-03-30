@@ -1,7 +1,7 @@
 # Cisco-OSPF-Monitor
 ### A simple Cisco IOS OSPF monitoring tool, with OSPF state transition email notifications and network graph visualization, including physics.
 ![Cisco OSPF Monitor Network Graph](https://github.com/Xorlent/Cisco-OSPF-Monitor/blob/main/OSPFGraph-Example.png)
-
+Notes: Nodes (the bubbles) indicate the switch management IP address, edges (the lines) indicate the connecting router IP address.  These are usually, but not always the same value.  
 
 ### Background
 As networks grow in size and complexity, overseeing the health of all links becomes increasingly challenging without specialized products.  This tool collects OSPF stats for every switch being monitored and emails a daily report of any OSPF neighbors that have had a state change since the last check, making it easy to see which links are problematic and in need of attention.  Beyond a Windows machine with PowerShell, this tool needs only one thing: plink.exe, a free, standalone executable utility by the creator of PuTTY.  No installs, no paid PowerShell modules, no TFTP server to set up and secure.
