@@ -20,13 +20,158 @@ if (-not(Test-Path -Path $TodaysBackupFolder -PathType Container)){
     exit
 }
 
+# Set up HTML components for graph output
+$StaticHead = @'
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>OSPF Network Visualizer</title>
+
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js">
+    </script>
+
+    <style type="text/css">
+      #mynetwork {
+        width: 1200px;
+        height: 800px;
+        border: 1px solid lightgray;
+      }
+    </style>
+  </head>
+  <body>
+    <p>OSPF Network Diagram.</p>
+
+    <div id="mynetwork"></div>
+
+    <script type="text/javascript">
+
+'@
+
+$NodeData = '      var nodes = new vis.DataSet([' + "`r`n"
+$NodeEntryOpen = '        { id: '
+$NodeEntryMid = ', label: "'
+$NodeEntryEnd = '" },' + "`r`n"
+$NodeClose = '      ]);' + "`r`n"
+
+$EdgeData = '      var edges = new vis.DataSet([' + "`r`n"
+$EdgeEntryOpen = '        { from: '
+$EdgeEntryMid = ', to: '
+$NodeEntryMid2 = ', label: "'
+$EdgeEntryEnd = '" },' + "`r`n"
+$EdgeClose = '      ]);' + "`r`n"
+
+$StaticFoot = @'
+      // create a network
+      var container = document.getElementById("mynetwork");
+      var data = {
+        nodes: nodes,
+        edges: edges,
+      };
+      var options = {};
+      var network = new vis.Network(container, data, options);
+    </script>
+  </body>
+</html>
+'@
+
 # Open the config file with the list of switch IPs
 $SwitchFile = Get-Content $SwitchList
+
+# Start building the network graph HTML file.
+$OSPFHTML = $StaticHead + $NodeData
+
+# Initialize variables for the foreach loop.
+$ValidRecord = 0
+$SwitchID = 0
+$NeighborList = @()
+$NodeEntry = ""
+$EdgeEntry = $EdgeData
+$SwitchDB = @("zero")
+
+# Process each switch within the switch.txt file to build the OSPF neighbor list and graph HTML...
+foreach($Switch in $SwitchFile){
+    # Router ID file
+    $RIDFile = $TodaysBackupFolder + '\' + $Switch + '-RID.txt'
+    # Neighbor detail file
+    $ConfigFile = $TodaysBackupFolder + '\' + $Switch + '.txt'
+    # SwitchID keeps track of the switch numeric index we use to populate the graph HTML.
+    $SwitchID++
+    # Add this switch to the graph HTML node list
+    $NodeEntry = $NodeEntry + $NodeEntryOpen + $SwitchID + $NodeEntryMid + $Switch + $NodeEntryEnd
+
+    foreach($line in Get-Content $RIDFile -Encoding UTF8 ) {
+        if($line -match 'OSPF Router with ID '){
+            # Add this switch router ID to the list of switches that we then scan to find relationships when processing neighbor data.
+            $line = $line.TrimStart(" ")
+            $startRID = $line.IndexOf('(')
+            $endRID = $line.IndexOf(')')
+            $SwitchDB += $line.Substring(($startRID + 1), ($endRID - $startRID - 1))
+            # This switch is a OSPF router.  Mark the record so we process the neighbor detail file.
+            $ValidRecord = 1
+            # No need to process the rest of the file, we already got the router ID.
+            break
+        }
+    }
+    if($ValidRecord -eq 1){ # If we found a router ID for this switch, let's process its neighbors.
+        foreach($line in Get-Content $ConfigFile -Encoding UTF8 ) {
+            if($line -match ", interface address "){ # For each neighbor, grab the IP address and add it to $NeighborList.
+                $line = $line.TrimStart(" ")
+                $start = $line.IndexOf(" ")
+                $end = $line.IndexOf(",")
+                $NeighborIP = $line.Substring(($start + 1), ($end - $start - 1))
+                $NeighborList += $SwitchID.ToString() + "," + $NeighborIP
+            }
+        }
+    # Reset the $ValidRecord flag in preparation for the next switch files.
+    $ValidRecord = 0
+    }
+    else{
+    # Insert a placeholder value so we keep the array index consistent with $SwitchID
+        $SwitchDB += "zero"
+    }
+}
+
+$EdgeLabel = ""
+# Process the neighbor list, converting neighbor IP addresses to the ID number of the Node in the HTML JSON.
+foreach($Neighbor in $NeighborList){
+    # NeighborID will be -1 if we don't find a match -- this could happen if a switch is missing from the switch.txt file.
+    $NeighborID = -1
+    # NeighborList is CSV containing neighbor relationships: $SwitchID,$NeighborIP(router ID).
+    $ParsedNeighbors = $Neighbor.Split(",")
+    $RouterID = $ParsedNeighbors[1]
+    $ParsedNeighbors[1] = $ParsedNeighbors[1] + '$'
+    for($i=0;$i-le $SwitchDB.length-1;$i++){
+        # Look for the neighbor IP in the $SwitchDB, which contains all of the router IDs.
+        if($SwitchDB[$i] -match $ParsedNeighbors[1]){
+            $NeighborID = $i
+        }
+    }
+    if($NeighborID -ne -1){
+        # If we found the neighbor in $SwitchDB (router IDs), then create an edge record which connects switches on the graph.
+        $EdgeEntry = $EdgeEntry + $EdgeEntryOpen + $ParsedNeighbors[0] + $EdgeEntryMid + $NeighborID + $NodeEntryMid2 + $RouterID + $EdgeEntryEnd
+    }
+}
+
+# Terminate the JSON for nodes and edges
+$NodeEntry = $NodeEntry + $NodeClose
+$EdgeEntry = $EdgeEntry + $EdgeClose
+
+# Build the final HTML file
+$GraphHTML = $OSPFHTML + $NodeEntry + $EdgeEntry + $StaticFoot
+
+#Write the OSPF visual graph HTML in today's backup folder
+$GraphFile = $TodaysBackupFolder + '\OSPFGraph.html'
+$GraphHTML | Out-File $GraphFile
+
+# Initialize variables for the foreach loop.
 $FailCount = 0
-$FailList = "SCRIPT EXECUTION COMPLETED: $CurrentTime`r`n`r`n"
+$FailList = "SCRIPT EXECUTION COMPLETED: $CurrentTime`r`nOSPF GRAPH ATTACHED TO THIS EMAIL.`r`n`r`n"
 
 # Parse each OSPF detail statement output and log any transitons within the past 24 hours.
 foreach($Switch in $SwitchFile){
+    # Neighbor detail file
     $ConfigFile = $TodaysBackupFolder + '\' + $Switch + '.txt'
 
     $RecordMarker = 0
@@ -60,11 +205,11 @@ foreach($Switch in $SwitchFile){
     }
 }
 
-#Write the OSPF results to a text file in today's backup folder
+#Write the recent OSPF transition results to a text file in today's backup folder
 $FailFile = $TodaysBackupFolder + '\OSPFChanges.txt'
 $FailList | Out-File $FailFile
 
-# If OSPF state changed on any switches, generate an email digest with the neighbor details
+# If OSPF state changed on any switches, generate an email digest with the neighbor details and attach an OSPF graph
 if(($SMTPServer -ne "smtp.hostname.here") -and $FailCount -gt 0){
-    Send-MailMessage -From "Cisco OSPF $FromAddress" -To $ToAddress -Subject 'Recent OSPF State Changes' -Body $FailList -SmtpServer $SMTPServer -Port $SMTPPort
+    Send-MailMessage -Attachments $GraphFile -From "Cisco OSPF $FromAddress" -To $ToAddress -Subject 'Recent OSPF State Changes' -Body $FailList -SmtpServer $SMTPServer -Port $SMTPPort
 }
