@@ -59,7 +59,7 @@ $EdgeData = '      var edges = new vis.DataSet([' + "`r`n"
 $EdgeEntryOpen = '        { from: '
 $EdgeEntryMid = ', to: '
 $NodeEntryMid2 = ', label: "'
-$EdgeEntryEnd = '" },' + "`r`n"
+$EdgeEntryEnd = '" , arrows: "to" },' + "`r`n"
 $EdgeClose = '      ]);' + "`r`n"
 
 $StaticFoot = @'
