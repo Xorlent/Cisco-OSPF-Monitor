@@ -13,7 +13,7 @@ As networks grow in size and complexity, overseeing the health of all links beco
   - Download the latest Cisco-OSPF-Monitor release.
   - Right-click the downloaded ZIP, select Properties, click Unblock" and Ok.
   - Extract the ZIP to a secure folder of your choice.  I recommend C:\Scripts\OSPF\ -- the default configuration file entries are set to this path.
-    - Only admins and the service account you plan to use if scheduling switch backups should have access to this location.
+    - Only admins and the service account you plan to use if scheduling OSPF monitoring should have access to this location.
   - Read and understand the PuTTY/plink.exe license and usage restrictions, found here [https://www.chiark.greenend.org.uk/~sgtatham/putty/](https://www.chiark.greenend.org.uk/~sgtatham/putty/)
 
 ### Usage
