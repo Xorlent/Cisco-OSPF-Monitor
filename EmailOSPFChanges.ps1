@@ -84,7 +84,7 @@ $StaticFoot = @'
             "edges": {
               "smooth": {
                 "type": "curvedCW",
-                "roundness": 0.20
+                "roundness": 0.25
               }
             }
           };
