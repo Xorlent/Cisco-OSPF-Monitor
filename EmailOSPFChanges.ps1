@@ -80,7 +80,14 @@ $StaticFoot = @'
       const physicsCheckbox = document.querySelector("#physics");
       physicsCheckbox.addEventListener("change", () => {
         if (physicsCheckbox.checked) {
-          options = { physics: false };
+          options = { physics: false,
+            "edges": {
+              "smooth": {
+                "type": "curvedCW",
+                "roundness": 0.20
+              }
+            }
+          };
           network = new vis.Network(container, data, options);
         }
         else {
