@@ -34,7 +34,7 @@ $StaticHead = @'
 
     <style type="text/css">
       #mynetwork {
-        width: 1200px;
+        width: 100%;
         height: 800px;
         border: 1px solid lightgray;
       }
@@ -42,7 +42,12 @@ $StaticHead = @'
   </head>
   <body>
     <p>OSPF Network Diagram.</p>
-
+    <div>
+      <label>
+        <input type="checkbox" id="physics" name="physics" value="physics" />
+        Physics Off
+      </label>
+    </div>
     <div id="mynetwork"></div>
 
     <script type="text/javascript">
@@ -71,7 +76,20 @@ $StaticFoot = @'
       };
       var options = {};
       var network = new vis.Network(container, data, options);
+
+      const physicsCheckbox = document.querySelector("#physics");
+      physicsCheckbox.addEventListener("change", () => {
+        if (physicsCheckbox.checked) {
+          options = { physics: false };
+          network = new vis.Network(container, data, options);
+        }
+        else {
+          options = { };
+          network = new vis.Network(container, data, options);
+        }
+      });
     </script>
+    Note: Nodes (the bubbles) indicate the switch management IP address, edges (the lines) indicate the connecting router IP address. These are usually, but not always the same value.
   </body>
 </html>
 '@
